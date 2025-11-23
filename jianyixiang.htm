@@ -1,0 +1,649 @@
+<!doctype html>
+<!--
+  文件: jianyixiang.htm
+  说明: "建议箱" 页面 — 使用 Getform 进行在线表单提交，支持历史建议实时显示和带密码保护的清空功能
+  目的: 实现无需自建服务器的表单收集、历史记录动态更新和安全管理功能
+-->
+<html lang="zh-CN">
+<head>
+  <!-- 页面字符编码 -->
+  <meta charset="utf-8">
+  <script src="js/audio-control.js" defer></script>
+  <audio id="backgroundMusic" loop>
+        <source src="./music/Record_2025-11-22-14-05-21_7b0192bb095934fb799cb0.mp3" type="audio/mpeg">
+    </audio>
+  <!-- 页面标题 -->
+  <title>zjm的空间 - 建议箱</title>
+  <!-- 引入通用样式表: 所有页面共享暗色卡片主题 -->
+  <link rel="stylesheet" href="./css/style.css">
+  <!-- 可选: 添加 viewport 声明提升移动端可用性 -->
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    /* 表单反馈样式 */
+    #form-status {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 6px;
+      display: none;
+    }
+    .success {
+      background-color: rgba(46, 204, 113, 0.2);
+      color: #2ecc71;
+      border: 1px solid rgba(46, 204, 113, 0.3);
+    }
+    .error {
+      background-color: rgba(231, 76, 60, 0.2);
+      color: #e74c3c;
+      border: 1px solid rgba(231, 76, 60, 0.3);
+    }
+    .loading {
+      background-color: rgba(52, 152, 219, 0.2);
+      color: #3498db;
+      border: 1px solid rgba(52, 152, 219, 0.3);
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    /* 表单输入验证样式 */
+    input:invalid, textarea:invalid {
+      border-color: rgba(231, 76, 60, 0.5);
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    
+    /* 历史建议表格样式 */
+    .history-container {
+      margin-top: 12px;
+    }
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .history-table th, .history-table td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    .history-table th {
+      background: rgba(0, 0, 0, 0.2);
+      color: #fff;
+      font-weight: normal;
+    }
+    .history-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    /* 清空按钮样式 */
+    #clear-history {
+      background-color: rgba(231, 76, 60, 0.2);
+      color: #e74c3c;
+      border: 1px solid rgba(231, 76, 60, 0.3);
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    #clear-history:hover {
+      background-color: rgba(231, 76, 60, 0.3);
+    }
+    #clear-history:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    /* 密码输入对话框样式 */
+    .password-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      visibility: hidden;
+      opacity: 0;
+      transition: visibility 0s linear 0.3s, opacity 0.3s;
+    }
+    .password-modal.active {
+      visibility: visible;
+      opacity: 1;
+      transition-delay: 0s;
+    }
+    .password-modal-content {
+      background-color: var(--panel);
+      padding: 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+    .password-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .password-modal-header h3 {
+      margin: 0;
+      color: #fff;
+    }
+    .close-button {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--muted);
+      padding: 0;
+      line-height: 1;
+    }
+    .close-button:hover {
+      color: #fff;
+    }
+    .password-input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      background-color: rgba(0, 0, 0, 0.2);
+      color: #fff;
+      box-sizing: border-box;
+    }
+    .password-input:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+    .modal-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .confirm-button {
+      background-color: rgba(46, 204, 113, 0.2);
+      color: #2ecc71;
+      border: 1px solid rgba(46, 204, 113, 0.3);
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .confirm-button:hover {
+      background-color: rgba(46, 204, 113, 0.3);
+    }
+    .cancel-button {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--muted);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .cancel-button:hover {
+      background-color: rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+    
+    /* 空状态样式 */
+    .empty-state {
+      text-align: center;
+      padding: 20px;
+      color: var(--muted-2);
+    }
+    
+    /* 动态效果 */
+    .fade-in {
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    
+    /* 滚动容器 */
+    .scrollable {
+      max-height: 400px;
+      overflow-y: auto;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    /* 视频背景样式 */
+    video {
+      position: fixed;
+      top: 0;
+      left: -15%;
+      min-width: 130%;
+      min-height: 100%;
+      width: auto;
+      height: auto;
+      z-index: -1;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body>
+  <!-- 添加音乐控制按钮 -->
+    <div class="music-control">
+        <button id="toggleMusic" class="music-btn">🎵 播放音乐</button>
+    </div>
+  <!-- 视频背景 -->
+  <video autoplay loop muted playsinline>
+    <source src="./image/视频/VID_20251121_211704.mp4" type="video/mp4">
+  </video>
+  <!-- 页眉: 站点名称与导航。导航使用相对链接，便于在本地查看。 -->
+  <header>
+    <h1 style="margin:0">zjm的空间</h1>
+    <nav>
+      <a href="./index.htm">首页</a>
+      <a href="./gerenjianjie.htm">个人简介</a>
+      <a href="./xiangce.htm">相册</a>
+      <a href="./shipin.htm">视频</a>
+      <a href="./zuopin.htm">作品</a>
+      <a href="./jianyixiang.htm">建议箱</a>
+    </nav>
+  </header>
+
+  <!-- 主体容器: 使用 .site 限制宽度并居中，主卡片使用 .card -->
+  <div class="site">
+    <main class="card">
+      <!-- 页面主标题，使用内联样式保持与现有主题一致 -->
+      <h2 style="color:#fff;margin-top:0">建议箱</h2>
+
+      <!-- 提交建议区块 -->
+      <section style="margin-top:12px">
+        <h3 style="color:#fff">提交建议</h3>
+        <!-- 使用 Getform 进行表单提交 -->
+        <form id="suggestion-form" action="https://getform.io/f/bwnyllna" method="POST">
+          <!-- 添加隐藏字段以防止垃圾邮件 -->
+          <input type="hidden" name="_got_it" style="display:none">
+          
+          <!-- 姓名: 简单文本输入 -->
+          <div class="form-group">
+            <label style="color:var(--muted)" for="name">姓名：</label>
+            <input type="text" id="name" name="name" required>
+          </div>
+
+          <!-- 邮箱: 使用 email 类型，浏览器会做基本校验 -->
+          <div class="form-group">
+            <label style="color:var(--muted)" for="email">邮箱：</label>
+            <input type="email" id="email" name="email" required>
+          </div>
+
+          <!-- 建议内容: 多行文本 -->
+          <div class="form-group">
+            <label style="color:var(--muted)" for="message">建议内容：</label>
+            <textarea id="message" name="message" required></textarea>
+          </div>
+
+          <!-- 提交按钮 -->
+          <button type="submit" id="submit-button">发送建议</button>
+          
+          <!-- 表单状态反馈区域 -->
+          <div id="form-status"></div>
+        </form>
+      </section>
+
+      <!-- 历史建议: 动态显示 -->
+      <section class="history-container">
+        <div class="history-header">
+          <h3 style="color:#fff;margin:0">历史建议</h3>
+          <button id="clear-history">清空历史</button>
+        </div>
+        <div class="scrollable">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>姓名</th>
+                <th>邮箱</th>
+                <th>建议内容</th>
+                <th>提交时间</th>
+              </tr>
+            </thead>
+            <tbody id="history-list">
+              <!-- 历史建议将通过 JavaScript 动态填充 -->
+              <tr id="empty-row"><td colspan="4" class="empty-state">暂无记录。</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 联系方式: 仍然保留在页面上 -->
+      <section style="margin-top:12px;color:var(--muted)">
+        <h3 style="color:#fff">联系方式</h3>
+        <p>邮箱：13017337997@163.com</p>
+      </section>
+    </main>
+  </div>
+
+  <!-- 密码验证模态框 -->
+  <div id="password-modal" class="password-modal">
+    <div class="password-modal-content">
+      <div class="password-modal-header">
+        <h3>验证密码</h3>
+        <button id="close-modal" class="close-button">×</button>
+      </div>
+      <div class="form-group">
+        <label style="color:var(--muted)" for="password-input">请输入密码：</label>
+        <input type="password" id="password-input" class="password-input" placeholder="请输入管理密码">
+      </div>
+      <div id="password-error" style="color: #e74c3c; margin-bottom: 15px; display: none;">密码错误，请重试。</div>
+      <div class="modal-buttons">
+        <button id="cancel-clear" class="cancel-button">取消</button>
+        <button id="confirm-clear" class="confirm-button">确认清空</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 添加表单提交处理和历史建议动态更新的 JavaScript -->
+  <script>
+    // 音频控制脚本
+        const audio = document.getElementById('backgroundMusic');
+        const toggleBtn = document.getElementById('toggleMusic');
+        
+        // 默认不自动播放（浏览器限制）
+        toggleBtn.addEventListener('click', function() {
+            if (audio.paused) {
+                audio.play().catch(error => {
+                    console.log('播放失败:', error);
+                    alert('请点击允许播放背景音乐');
+                });
+                toggleBtn.textContent = '🎵 暂停音乐';
+            } else {
+                audio.pause();
+                toggleBtn.textContent = '🎵 播放音乐';
+            }
+        });
+        
+        // 页面可见性变化时控制音乐
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                // 页面不可见时暂停
+                audio.pause();
+            }
+        });
+    document.addEventListener('DOMContentLoaded', function() {
+      // 表单相关元素
+      const form = document.getElementById('suggestion-form');
+      const statusElement = document.getElementById('form-status');
+      const submitButton = document.getElementById('submit-button');
+      
+      // 历史建议相关元素
+      const historyList = document.getElementById('history-list');
+      const emptyRow = document.getElementById('empty-row');
+      const clearHistoryButton = document.getElementById('clear-history');
+      
+      // 密码验证模态框相关元素
+      const passwordModal = document.getElementById('password-modal');
+      const passwordInput = document.getElementById('password-input');
+      const passwordError = document.getElementById('password-error');
+      const closeModalButton = document.getElementById('close-modal');
+      const cancelClearButton = document.getElementById('cancel-clear');
+      const confirmClearButton = document.getElementById('confirm-clear');
+      
+      // 管理密码（注意：这只是前端验证，实际应用中应使用更安全的验证方式）
+      const ADMIN_PASSWORD = 'zjm20070419'; // 这里可以修改为你想要的密码
+      
+      // 存储历史建议的数据结构
+      let suggestions = [];
+      
+      // 页面加载时从本地存储加载历史建议
+      loadSuggestionsFromStorage();
+      
+      // 表单提交处理
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // 显示加载状态
+        statusElement.textContent = '正在发送建议...';
+        statusElement.className = 'loading';
+        statusElement.style.display = 'block';
+        submitButton.disabled = true;
+        
+        // 创建表单数据
+        const formData = new FormData(this);
+        
+        // 使用 Fetch API 提交表单
+        fetch(this.action, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Accept': 'application/json'
+          }
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('提交失败，请稍后重试');
+          }
+          return response.json();
+        })
+        .then(data => {
+          // 显示成功消息
+          statusElement.textContent = '建议提交成功！感谢您的反馈。';
+          statusElement.className = 'success';
+          
+          // 创建新建议对象
+          const newSuggestion = {
+            name: formData.get('name'),
+            email: formData.get('email'),
+            message: formData.get('message'),
+            timestamp: new Date().toLocaleString('zh-CN')
+          };
+          
+          // 添加新建议到历史记录并保存
+          addNewSuggestion(newSuggestion);
+          
+          // 重置表单
+          form.reset();
+          
+          // 5秒后隐藏成功消息
+          setTimeout(() => {
+            statusElement.style.display = 'none';
+          }, 5000);
+        })
+        .catch(error => {
+          // 显示错误消息
+          statusElement.textContent = '提交失败: ' + error.message;
+          statusElement.className = 'error';
+          console.error('表单提交错误:', error);
+        })
+        .finally(() => {
+          // 恢复按钮状态
+          submitButton.disabled = false;
+        });
+      });
+      
+      // 清空历史建议按钮事件处理 - 显示密码验证模态框
+      clearHistoryButton.addEventListener('click', function() {
+        if (suggestions.length === 0) {
+          return; // 如果没有记录，不执行任何操作
+        }
+        
+        // 重置密码输入和错误提示
+        passwordInput.value = '';
+        passwordError.style.display = 'none';
+        
+        // 显示密码验证模态框
+        passwordModal.classList.add('active');
+        
+        // 自动聚焦到密码输入框
+        passwordInput.focus();
+      });
+      
+      // 关闭模态框函数
+      function closeModal() {
+        passwordModal.classList.remove('active');
+        passwordInput.value = '';
+        passwordError.style.display = 'none';
+      }
+      
+      // 关闭模态框事件
+      closeModalButton.addEventListener('click', closeModal);
+      cancelClearButton.addEventListener('click', closeModal);
+      
+      // 点击模态框外部关闭
+      passwordModal.addEventListener('click', function(e) {
+        if (e.target === passwordModal) {
+          closeModal();
+        }
+      });
+      
+      // ESC键关闭模态框
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && passwordModal.classList.contains('active')) {
+          closeModal();
+        }
+      });
+      
+      // 确认清空按钮事件处理
+      confirmClearButton.addEventListener('click', function() {
+        const enteredPassword = passwordInput.value;
+        
+        // 验证密码
+        if (enteredPassword !== ADMIN_PASSWORD) {
+          passwordError.style.display = 'block';
+          passwordInput.focus();
+          return;
+        }
+        
+        // 密码正确，执行清空操作
+        // 清空本地存储
+        localStorage.removeItem('suggestions');
+        
+        // 清空数组
+        suggestions = [];
+        
+        // 更新UI
+        renderSuggestions();
+        
+        // 显示清空成功消息
+        statusElement.textContent = '历史建议已清空。';
+        statusElement.className = 'success';
+        statusElement.style.display = 'block';
+        
+        // 关闭模态框
+        closeModal();
+        
+        // 3秒后隐藏消息
+        setTimeout(() => {
+          statusElement.style.display = 'none';
+        }, 3000);
+      });
+      
+      // 密码输入框回车确认
+      passwordInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          confirmClearButton.click();
+        }
+      });
+      
+      // 从本地存储加载建议
+      function loadSuggestionsFromStorage() {
+        try {
+          const stored = localStorage.getItem('suggestions');
+          if (stored) {
+            suggestions = JSON.parse(stored);
+            // 按时间倒序排列，最新的在前面
+            suggestions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            renderSuggestions();
+          } else {
+            // 如果没有历史记录，使用空数组
+            suggestions = [];
+            saveSuggestionsToStorage();
+            renderSuggestions();
+          }
+        } catch (error) {
+          console.error('加载历史建议失败:', error);
+          suggestions = [];
+        }
+      }
+      
+      // 保存建议到本地存储
+      function saveSuggestionsToStorage() {
+        try {
+          localStorage.setItem('suggestions', JSON.stringify(suggestions));
+        } catch (error) {
+          console.error('保存历史建议失败:', error);
+        }
+      }
+      
+      // 渲染建议列表
+      function renderSuggestions() {
+        // 移除所有现有行（除了空状态行）
+        while (historyList.firstChild) {
+          if (historyList.firstChild === emptyRow) {
+            break;
+          }
+          historyList.removeChild(historyList.firstChild);
+        }
+        
+        // 显示或隐藏空状态
+        if (suggestions.length === 0) {
+          emptyRow.style.display = '';
+          clearHistoryButton.disabled = true; // 禁用清空按钮
+        } else {
+          emptyRow.style.display = 'none';
+          clearHistoryButton.disabled = false; // 启用清空按钮
+        }
+        
+        // 添加所有建议行
+        suggestions.forEach(suggestion => {
+          const row = createSuggestionRow(suggestion);
+          historyList.insertBefore(row, emptyRow);
+        });
+      }
+      
+      // 创建建议行元素
+      function createSuggestionRow(suggestion) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${suggestion.name}</td>
+          <td>${suggestion.email}</td>
+          <td>${suggestion.message}</td>
+          <td>${suggestion.timestamp}</td>
+        `;
+        return row;
+      }
+      
+      // 添加新建议并实时更新
+      function addNewSuggestion(suggestion) {
+        // 将新建议添加到数组开头
+        suggestions.unshift(suggestion);
+        
+        // 保存到本地存储
+        saveSuggestionsToStorage();
+        
+        // 隐藏空状态
+        emptyRow.style.display = 'none';
+        clearHistoryButton.disabled = false; // 启用清空按钮
+        
+        // 创建新行并添加到表格开头
+        const newRow = createSuggestionRow(suggestion);
+        newRow.classList.add('fade-in'); // 添加淡入动画
+        historyList.insertBefore(newRow, historyList.firstChild);
+        
+        // 平滑滚动到新添加的行
+        setTimeout(() => {
+          newRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
+      }
+    });
+  </script>
+</body>
+</html>

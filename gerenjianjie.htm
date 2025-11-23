@@ -1,0 +1,123 @@
+<!doctype html>
+<!--
+  文件: gerenjianjie.htm
+  描述: 个人简介页面，使用简单的表格布局将页面分为左侧导航和右侧内容区。
+  说明: 我在不改变原始结构和功能的前提下添加了详细中文注释，便于学习与维护。
+-->
+<html lang="zh-CN">
+<head>
+  <!-- 指定字符编码，保证中文正确显示 -->
+  <meta charset="utf-8">
+  <audio id="backgroundMusic" loop>
+        <source src="./music/Record_2025-11-22-14-05-21_7b0192bb095934fb799cb0.mp3" type="audio/mpeg">
+    </audio>
+  <!-- 页面标题，显示在浏览器标签上 -->
+  <title>zjm的空间 - 个人简介</title>
+
+  <!-- 内联样式：调整为暗色卡片风格，以仿照附件图片效果 -->
+  <link rel="stylesheet" href="./css/style.css">
+  <style>
+  /* 视频背景样式 */
+    video {
+      position: fixed;
+      top: 0;
+      left: -15%;
+      min-width: 130%;
+      min-height: 100%;
+      width: auto;
+      height: auto;
+      z-index: -1;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body>
+  <!-- 添加音乐控制按钮 -->
+    <div class="music-control">
+        <button id="toggleMusic" class="music-btn">🎵 播放音乐</button>
+    </div>
+  <!-- 视频背景 -->
+  <video autoplay loop muted playsinline>
+    <source src="./image/视频/VID_20251121_211704.mp4" type="video/mp4">
+  </video>
+  
+  <!-- 页眉: 包含站点名和全局导航 -->
+  <header>
+    <!-- 站点名称（可视文本） -->
+    <h1 style="margin:0;font-size:32px">zjm的空间</h1>
+    <!-- 顶部导航：各页面的相对链接，方便用户在站点内跳转 -->
+    <nav>
+      <a href="./index.htm">首页</a>
+      <a href="./gerenjianjie.htm">个人简介</a>
+      <a href="./xiangce.htm">相册</a>
+      <a href="./shipin.htm">视频</a>
+      <a href="./zuopin.htm">作品</a>
+      <a href="./jianyixiang.htm">建议箱</a>
+    </nav>
+  </header>
+
+  <!-- 页面主体：卡片化两栏布局，左侧为个人卡片，右侧为详细信息卡片 -->
+  <div class="site">
+    <div class="profile-grid">
+      <!-- 左侧个人卡片（关于我） -->
+      <aside class="card">
+        <div class="card-title" style="color:#fff;font-size:18px;margin-bottom:12px">关于我</div>
+        <!-- 如果有头像图片，可放在 ./1/ 或替换 src 路径 -->
+        <div class="info-list">
+          <div class="info-item"><strong>姓名：</strong>郑杰铭</div>
+          <div class="info-item"><strong>性别：</strong>男</div>
+          <div class="info-item"><strong>出生：</strong>2007年4月19日</div>
+          <div class="avatar"><img src="./image/mmexport1750504311176.jpg" ></div>
+        </div>
+      </aside>
+
+      <!-- 右侧信息卡片（更多信息） -->
+      <main class="card">
+        <div class="card-title">更多信息</div>
+        <div class="panel">
+          <p>我喜欢挑战和尝试新事物，无论是在学习编程还是其他兴趣爱好上，我都愿意投入时间去探索。</p>
+        </div>
+
+        <div class="panel">
+          <p><b>联系方式：</b><p>
+          <p>邮箱：13017337997@163.com &nbsp; 电话：+86 130 1733 7997</p>
+          <p><b>QQ：</b>2878090231 &nbsp; <b>微信：</b>nanyi13017337997</p>
+        </div>
+
+        <div class="panel">
+          <p><b>教育背景：</b><p>
+          <p>高中：长郡中学</p>
+          <p>大学：华中科技大学  专业：计算机科学与技术</p>
+        </div>
+      </main>
+    </div>
+  </div>
+  <script>
+     // 音频控制脚本
+        const audio = document.getElementById('backgroundMusic');
+        const toggleBtn = document.getElementById('toggleMusic');
+        
+        // 默认不自动播放（浏览器限制）
+        toggleBtn.addEventListener('click', function() {
+            if (audio.paused) {
+                audio.play().catch(error => {
+                    console.log('播放失败:', error);
+                    alert('请点击允许播放背景音乐');
+                });
+                toggleBtn.textContent = '🎵 暂停音乐';
+            } else {
+                audio.pause();
+                toggleBtn.textContent = '🎵 播放音乐';
+            }
+        });
+        
+        // 页面可见性变化时控制音乐
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                // 页面不可见时暂停
+                audio.pause();
+            }
+        });
+        </script>
+</body>
+</html>

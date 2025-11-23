@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <audio id="backgroundMusic" loop>
+        <source src="./music/Record_2025-11-22-14-05-21_7b0192bb095934fb799cb0.mp3" type="audio/mpeg">
+    </audio>
+  <title>zjm的空间</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <style>
+    /* 视频背景样式 */
+    video {
+      position: fixed;
+      top: 0;
+      left: -15%;
+      min-width: 130%;
+      min-height: 100%;
+      width: auto;
+      height: auto;
+      z-index: -1;
+      object-fit: cover;
+    }
+    
+    /* 文本样式 */
+    #sentence {
+      position: absolute;
+      color: white; 
+      font-size: 36px;
+      text-align: center;
+      width: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      margin: 0;
+      padding: 0;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+      font-weight: bold;
+    }
+    
+    /* 导航栏样式调整 */
+    header {
+      position: relative;
+      z-index: 10;
+      margin-bottom: 20px;
+    }
+    
+    /* 半透明遮罩增强文字可读性 */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: -1;
+    }
+    
+    /* 确保底部内容不会被遮挡 */
+    body {
+      padding-bottom: 60px;
+    }
+  </style>
+</head>
+<body>
+  <!-- 添加音乐控制按钮 -->
+    <div class="music-control">
+        <button id="toggleMusic" class="music-btn">🎵 播放音乐</button>
+    </div>
+  <!-- 视频背景 -->
+  <video autoplay loop muted playsinline>
+    <source src="./image/视频/VID_20251121_211704.mp4" type="video/mp4">
+  </video>
+  
+  <!-- 半透明遮罩 -->
+  <div class="overlay"></div>
+  
+  <!-- 页眉导航 -->
+  <header>
+    <h1 style="margin:0">zjm的空间</h1>
+    <nav>
+      <a href="./index.htm">首页</a>
+      <a href="./gerenjianjie.htm">个人简介</a>
+      <a href="./xiangce.htm">相册</a>
+      <a href="./shipin.htm">视频</a>
+      <a href="./zuopin.htm">作品</a>
+      <a href="./jianyixiang.htm">建议箱</a>
+    </nav>
+  </header>
+
+  <!-- 文字轮播容器 -->
+  <div id="sentence"></div>
+
+  <script>
+     // 音频控制脚本
+        const audio = document.getElementById('backgroundMusic');
+        const toggleBtn = document.getElementById('toggleMusic');
+        
+        // 默认不自动播放（浏览器限制）
+        toggleBtn.addEventListener('click', function() {
+            if (audio.paused) {
+                audio.play().catch(error => {
+                    console.log('播放失败:', error);
+                    alert('请点击允许播放背景音乐');
+                });
+                toggleBtn.textContent = '🎵 暂停音乐';
+            } else {
+                audio.pause();
+                toggleBtn.textContent = '🎵 播放音乐';
+            }
+        });
+        
+        // 页面可见性变化时控制音乐
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                // 页面不可见时暂停
+                audio.pause();
+            }
+        });
+  // 要显示的句子，每个元素是一个字符串
+  const sentences = [ 
+    "欢迎来到我的空间",
+    "我想说",
+    "人生不过三万天",
+    "烂事就早点翻篇吧",
+    "希望我们在这个世界上",
+    "可以勇敢的做自己",
+    "我想说我们来到这个世界",
+    "不是为了繁衍后代",
+    "不只是为了做我们该做的事情",
+    "我们更应该",
+    "去看看花怎么开",
+    "水怎么流",
+    "太阳怎么升起",
+    "夕阳怎么落下",
+    "我们活在这个世界上",
+    "无非是要明白一些道理",
+    "遇见些有趣的事",
+    "生命它是一场偶然",
+    "我们只是在其中寻找因果",
+    "所以人啊",
+    "花大把时间迷茫",
+    "在几个瞬间成长",
+    "别急着赶路",
+    "去感受",
+    "去体会",
+    "去尝试生命的万般精彩",
+    "最后",
+    "祝我们生活愉快幸福",
+    "万事顺遂",
+    "与诸君共勉",
+    "——郑杰铭",
+  ];
+
+  // 当前句子的索引
+  let index = 0;
+
+  // 显示下一句的函数
+  function showNextSentence() {
+    if (index < sentences.length) {
+      const sentenceDiv = document.getElementById('sentence');
+      // 清空当前div内容
+      sentenceDiv.textContent = '';
+      // 将当前句子添加到div中
+      sentenceDiv.textContent = sentences[index];
+      // 准备显示下一句
+      index++;
+      // 等待1.3秒后显示下一句
+      setTimeout(showNextSentence, 1300);
+    } else {
+      // 句子播放完毕后重新开始
+      index = 0;
+      setTimeout(showNextSentence, 1000);
+    }
+  }
+
+  // 页面加载完成后开始显示第一句
+  window.onload = showNextSentence;
+  </script>
+
+</body>
+</html>
